@@ -4,43 +4,40 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-
+import androidx.compose.runtime.setValue
 class MainActivity : ComponentActivity() {
-    private lateinit var database: AppDatabase
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        database = AppDatabase.getInstance(applicationContext) // Inicialización de la base de datos
-
         setContent {
-            // Usa rememberSaveable para persistir el estado
-            var selectedDate by remember { mutableStateOf<String?>(null) }
+            // Estado para manejar la pantalla actual
+            var currentView by remember { mutableStateOf("calendario") }
+            var selectedDate by remember { mutableStateOf<String?>(null) }//Se iniciliza en nulo
 
             MaterialTheme {
-                if (selectedDate == null) {
-                    // Mostrar el calendario
-                    CalendarioVista { date ->
-                        selectedDate = date
-                    }
-                } else {
-                    // Mostrar el formulario de registro
-                    RegistroJornadaVista(
+                when (currentView) {
+                    "calendario" -> CalendarioVista(
+                        onDaySelected = { date ->
+                            selectedDate = date
+                            currentView = "registro_jornada"
+                        },
+                        onRegistroClick = {
+                            currentView = "horas_registro" // Cambia a la vista de registros guardados
+                        }
+                    )
+                    "registro_jornada" -> RegistroJornadaVista(
                         fecha = selectedDate!!,
-                        onSave = { registro ->
-                            lifecycleScope.launch {
-                                try {
-                                    database.registroJornadaDao().insertar(registro)
-                                    selectedDate = null // Volver al calendario
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            }
+                        onSave = {
+                            currentView = "calendario" // Vuelve al calendario tras guardar
+                        }
+                    )
+                    "horas_registro" -> HorasRegistro(
+                        registros = registros, // Pasa la lista global de registros
+                        onVolver = {
+                            currentView = "calendario" // Vuelve al calendario
                         }
                     )
                 }

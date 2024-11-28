@@ -1,16 +1,31 @@
 package com.example.paymeapp
 
 import android.annotation.SuppressLint
-import android.app.BackgroundServiceStartNotAllowedException
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,19 +37,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-
 @Composable
 fun RegistroJornadaVista(
     fecha: String,
-    onSave: (RegistroJornada)->Unit
+    onSave: () -> Unit
 ) {
-    //val scrollState = rememberScrollState()
-
     // Usamos `rememberSaveable` para las variables persistentes
     var horaEntrada by rememberSaveable { mutableStateOf("") }
     var horaSalida by rememberSaveable { mutableStateOf("") }
     var precioHora by rememberSaveable { mutableStateOf("") }
-        //var resultado by rememberSaveable { mutableStateOf("") }
+    var resultadoTexto by rememberSaveable { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -45,7 +57,7 @@ fun RegistroJornadaVista(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Registro de Jornada",
+            text = "Jornada $fecha",
             style = TextStyle(
                 color = Color.Black,
                 fontSize = 30.sp,
@@ -85,18 +97,12 @@ fun RegistroJornadaVista(
         // Botón para calcular
         Button(
             onClick = {
-                //resultado = RegistroJornadaControlador.calcularHorasTrabajadas(
-                    //horaEntrada,
-                    //horaSalida,
-                    //precioHora
-                val (horasTrabajadas, sueldoGanado) = RegistroJornadaControlador.calcularHorasTrabajadas(
-                    horaEntrada,
-                    horaSalida,
-                    precioHora
+                resultadoTexto = calcularRegistroCompleto(
+                    fecha = fecha,
+                    horaEntrada = horaEntrada,
+                    horaSalida = horaSalida,
+                    precioHora = precioHora
                 )
-            //Crear registro de jornada y pasar al DAO
-            val registro = RegistroJornada(fecha, horasTrabajadas, sueldoGanado)
-            onSave(registro)
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Blue,
@@ -107,20 +113,38 @@ fun RegistroJornadaVista(
                 .height(48.dp),
             shape = RoundedCornerShape(8.dp)
         ) {
+            Text(text = "Calcular", style = TextStyle(fontSize = 16.sp))
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        //Boton para guardar Registro
+        Button(
+            onClick = {
+                guardarRegistro(resultadoTexto)
+                onSave()
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Green,
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .height(48.dp),
+            shape = RoundedCornerShape(8.dp)
+        ) {
             Text(text = "Guardar", style = TextStyle(fontSize = 16.sp))
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Resultado
-        /*Text(
-            text = resultado,
-            style = TextStyle(
-                color = Color.Black,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal
-            )
-        )*/
+        OutlinedTextField(
+            value = resultadoTexto,
+            onValueChange = {},
+            label = { Text("Resultado") },
+            readOnly = true,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -206,5 +230,17 @@ fun DropdownMenuField(
         }
     }
 }
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 800)
+@Composable
+fun PreviewRegistroJornadaVista() {
+    RegistroJornadaVista(
+        fecha = "2024-11-25",
+        onSave = {} // No hace nada; solo es necesario para cumplir con la firma
+    )
+}
+
+
+
 
 

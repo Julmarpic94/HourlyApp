@@ -20,22 +20,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.*
 
 @Composable
-fun CalendarioVista(onDaySelected: (String) -> Unit) {
+fun CalendarioVista(
+    onDaySelected: (String) -> Unit, //funcion para seleccionar dia y abrir Registro
+    onRegistroClick: () -> Unit // funcion para volver al pulsar en VerRegistros
+
+) {
     val scrollState = rememberScrollState()
 
     // Información del calendario
-    val calendario = Calendar.getInstance()
-    val diasMes = remember { mutableStateListOf<Int>() }
+    val calendario = Calendar.getInstance() //Obtenemos el calendario de hoy, dia, mes y ano
+    val diasMes = remember { mutableStateListOf<Int>() }//Creamos la variable para listas los dias del mes
     calendario.set(Calendar.DAY_OF_MONTH, 1)
-    val totalDias = calendario.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val totalDias = calendario.getActualMaximum(Calendar.DAY_OF_MONTH)//calculamos el total de dias con del mes, segun nuesto calendario
 
     // Genera los días del mes actual
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) {//Activamos una funcion secundaria que gener lo dias del mes
         diasMes.clear()
         diasMes.addAll(1..totalDias)
     }
@@ -51,7 +56,7 @@ fun CalendarioVista(onDaySelected: (String) -> Unit) {
     ) {
         // Texto "Calendario"
         Text(
-            text = "Calendario",
+            text = "Registro mensual",
             style = TextStyle(
                 color = Color.Black,
                 fontSize = 30.sp,
@@ -75,7 +80,7 @@ fun CalendarioVista(onDaySelected: (String) -> Unit) {
                     .height(300.dp) // Altura fija para el calendario
             ) {
                 items(diasMes) { day ->
-                    val selectedDate = "${calendario.get(Calendar.YEAR)}-${calendario.get(Calendar.MONTH) + 1}-$day"
+                    val fechaSeleccionada = "${calendario.get(Calendar.YEAR)}-${calendario.get(Calendar.MONTH) + 1}-$day"
                     Box(
                         modifier = Modifier
                             .padding(2.dp)
@@ -84,7 +89,7 @@ fun CalendarioVista(onDaySelected: (String) -> Unit) {
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .aspectRatio(1f)
-                            .clickable { onDaySelected(selectedDate) }, // Detecta el click en el día
+                            .clickable { onDaySelected(fechaSeleccionada) }, // Detecta el click en el día
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -95,9 +100,44 @@ fun CalendarioVista(onDaySelected: (String) -> Unit) {
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {},// llamamos al callback
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Blue,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(48.dp)
+                    .align(Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(text = "Guardar", style = TextStyle(fontSize = 16.sp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {onRegistroClick()},
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Blue,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(48.dp)
+                    .align(Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(text = " Ver Registro", style = TextStyle(fontSize = 16.sp))
+            }
         }
     }
 }
+
+
 
 fun obtenerMesyAnoString(): String {
     val calendario = Calendar.getInstance()
@@ -119,4 +159,17 @@ fun obtenerMesyAnoString(): String {
         else -> "Error, Mes no válido"
     }
     return "$mesString de $ano"
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 600)
+@Composable
+fun PreviewCalendarioVista() {
+    CalendarioVista(
+        onDaySelected = { selectedDate ->
+            println("Día seleccionado: $selectedDate") // Simulación de manejo de la selección
+        },
+        onRegistroClick = {
+            println("Ir a la vista de registros (simulado)") // Simulación de cambio a la vista de registros
+        }
+    )
 }
