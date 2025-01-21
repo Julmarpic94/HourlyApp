@@ -1,6 +1,5 @@
 package com.example.paymeapp
 
-import android.annotation.SuppressLint
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -36,11 +35,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.paymeapp.ui.theme.AzulClaro
+import com.example.paymeapp.ui.theme.AzulOscuro
 
+//PANTALLA VISTA PARA REGISTRAR LA JORNADA
 @Composable
 fun RegistroJornadaVista(
     fecha: String,
-    onSave: () -> Unit
+    guardar: () -> Unit // funcion para volver al guardar
 ) {
     // Usamos `rememberSaveable` para las variables persistentes
     var horaEntrada by rememberSaveable { mutableStateOf("") }
@@ -57,9 +59,9 @@ fun RegistroJornadaVista(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Jornada $fecha",
+            text = "Día: $fecha",
             style = TextStyle(
-                color = Color.Black,
+                color = AzulOscuro,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold
             ),
@@ -105,7 +107,7 @@ fun RegistroJornadaVista(
                 )
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Blue,
+                containerColor = AzulClaro,
                 contentColor = Color.White
             ),
             modifier = Modifier
@@ -116,14 +118,37 @@ fun RegistroJornadaVista(
             Text(text = "Calcular", style = TextStyle(fontSize = 16.sp))
         }
         Spacer(modifier = Modifier.height(24.dp))
-        //Boton para guardar Registro
+
+        //Boton para guardar Registro, en lista y en DB
         Button(
             onClick = {
-                guardarRegistro(resultadoTexto)
-                onSave()
+                //validamos los campos
+                if (horaEntrada.isEmpty() || horaSalida.isEmpty() || precioHora.isEmpty()) {
+                    resultadoTexto = "Por favor, completa todos los campos"
+                    return@Button
+
+                }
+
+                //Crear el registro
+                val registroFB = RegistroFirestore(
+                    fecha = fecha,
+                    horasTrabajadas = calcularHorasTrabajadas(horaEntrada, horaSalida),
+                    dineroGanado = calcularDineroGanado(
+                        calcularHorasTrabajadas(horaEntrada, horaSalida), precioHora
+                    )
+                )
+                //GUARDAR EN FIRESTORE
+                guardarFirestore(registroFB)
+
+                //Mostrar
+
+
+
+
+                guardar()
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Green,
+                containerColor = AzulOscuro,
                 contentColor = Color.White
             ),
             modifier = Modifier
@@ -133,7 +158,6 @@ fun RegistroJornadaVista(
         ) {
             Text(text = "Guardar", style = TextStyle(fontSize = 16.sp))
         }
-
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -148,7 +172,8 @@ fun RegistroJornadaVista(
     }
 }
 
-@SuppressLint("DefaultLocale")
+
+//Pikcers para capturar las horas
 @Composable
 fun TimePickerField(
     label: String,
@@ -184,6 +209,7 @@ fun TimePickerField(
     )
 }
 
+//Menu desplegable para gestionar el precio de las horas
 @Composable
 fun DropdownMenuField(
     selectedOption: String,
@@ -231,12 +257,14 @@ fun DropdownMenuField(
     }
 }
 
+
+//Vista Previa
 @Preview(showBackground = true, widthDp = 400, heightDp = 800)
 @Composable
 fun PreviewRegistroJornadaVista() {
     RegistroJornadaVista(
         fecha = "2024-11-25",
-        onSave = {} // No hace nada; solo es necesario para cumplir con la firma
+        guardar = {} // No hace nada; solo es necesario para cumplir con la firma
     )
 }
 

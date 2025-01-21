@@ -1,17 +1,24 @@
 package com.example.paymeapp
 
+
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+
+//CLASE CONTROLADOR CON TODOS LOS METODOS PARA GESTIONAR LOS REGISTROS
 
 // Lista mutable para almacenar los registros
-val registros = mutableListOf<String>()
 
 // Función para calcular las horas trabajadas
 fun calcularHorasTrabajadas(horaEntrada: String, horaSalida: String): Double {
     return try {
         val formato = SimpleDateFormat("HH:mm", Locale.FRANCE)
-        val entrada = formato.parse(horaEntrada) ?: throw IllegalArgumentException("Hora de entrada no válida")
-        var salida = formato.parse(horaSalida) ?: throw IllegalArgumentException("Hora de salida no válida")
+        val entrada = formato.parse(horaEntrada)
+            ?: throw IllegalArgumentException("Hora de entrada no válida")
+        var salida =
+            formato.parse(horaSalida) ?: throw IllegalArgumentException("Hora de salida no válida")
 
         if (salida.before(entrada)) {
             // Sumar 24 horas si la salida es el día siguiente
@@ -66,16 +73,64 @@ fun calcularRegistroCompleto(
     }
 }
 
-// Función para guardar un registro en la lista
-fun guardarRegistro(registro: String) {
-    if (registro.isNotEmpty() && !registro.startsWith("Error")) {
-        registros.add(registro)
-    } else {
-        println("Registro inválido. Asegúrate de calcular antes de guardar.")
-    }
+// FIRESTORE
+
+fun guardarFirestore(
+    registro: RegistroFirestore
+) {
+    val baseDatos = FirebaseFirestore.getInstance()
+
+    baseDatos.collection("registros")
+        .add(registro)// agrego el objeto de registo
 }
 
-// Función para mostrar todos los registros almacenados
-fun mostrarRegistros(): List<String> {
+suspend fun obtenerRegistrosFirestore(): List<RegistroFirestore> {
+    val registros = mutableListOf<RegistroFirestore>()
+    val baseDatos = FirebaseFirestore.getInstance()
+
+    try {
+        val snapshot = baseDatos.collection("registros").get().await()
+        snapshot.documents.forEach { doc ->
+            val registro = doc.toObject(RegistroFirestore::class.java)
+            if (registro != null) {
+                registros.add(registro.copy(id = doc.id))// pasamos el id generado al docuemento
+            }
+        }
+    } catch (e: Exception) {
+        println("Error al cargar Registros: ${e.message}")
+    }
     return registros
 }
+
+fun borrarRegistroDB(
+    registroId: String
+){
+    val baseDatos = FirebaseFirestore.getInstance()
+    baseDatos.collection("registros").document(registroId)
+        .delete()
+        .addOnSuccessListener {
+            println("Registro con ID $registroId borrado exitosamente")
+        }
+        .addOnFailureListener { exception ->
+            println("Error al borrar registro: ${exception.message}")
+        }
+}
+
+fun limpiarRegistrosDB(){
+    val baseDatos = FirebaseFirestore.getInstance()
+    baseDatos.collection("registros")
+        .get()
+        .addOnSuccessListener { snapshot ->
+            val batch = baseDatos.batch()
+            snapshot.documents.forEach{ doc ->
+                batch.delete(doc.reference)
+            }
+            batch.commit()
+                .addOnFailureListener { exception ->
+                    println("Error al borrar registro: ${exception.message}")
+                }
+        }
+}
+
+
+

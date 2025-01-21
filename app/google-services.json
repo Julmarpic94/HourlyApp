@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "822489410373",
+    "project_id": "hourly-2af6c",
+    "storage_bucket": "hourly-2af6c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:822489410373:android:33c768be6d9458cc84ac2c",
+        "android_client_info": {
+          "package_name": "com.example.paymeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwWtpEhv_bUmiUl-frq1LpRgaW1NK57Pc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
